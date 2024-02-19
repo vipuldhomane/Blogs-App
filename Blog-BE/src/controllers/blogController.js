@@ -18,4 +18,16 @@ exports.getAllBlogs = async (req, res) => {
   res.json(blogs);
 };
 
+exports.deleteBlog = async (req, res) => {
+  try {
+    const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
+    if (!deletedBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    res.json({ message: "Blog deleted successfully", deletedBlog });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 // Implement other CRUD operations similarly
