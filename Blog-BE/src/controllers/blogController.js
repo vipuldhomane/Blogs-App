@@ -18,6 +18,7 @@ exports.getAllBlogs = async (req, res) => {
   res.json(blogs);
 };
 
+// Delete Blog by ID
 exports.deleteBlog = async (req, res) => {
   try {
     const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
@@ -30,4 +31,22 @@ exports.deleteBlog = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-// Implement other CRUD operations similarly
+
+// Update a blog by ID
+exports.updateBlog = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { title, content },
+      { new: true } // Return the updated document
+    );
+    if (!updatedBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    res.json(updatedBlog);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
