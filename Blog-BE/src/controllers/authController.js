@@ -23,10 +23,46 @@ exports.login = async (req, res) => {
   if (!user) {
     return res.status(404).send("User not found");
   }
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(401).send("Invalid password");
+  if (await bcrypt.compare(password, user.password)) {
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+
+    // Save token to user document in database
+    user.token = token;
+    user.password = undefined;
+    // Set cookie for token and return success response
+    const options = {
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+    };
+    res.cookie("token", token, options).status(200).json({
+      success: true,
+      token,
+      user,
+      message: "User Login Success",
+    });
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: "Password is incorrect",
+    });
   }
-  const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET);
-  res.json({ token });
 };
+// exports.login = async (req, res) => {
+//   const { email, password } = req.body;
+//   const user = await User.findOne({ email });
+//   if (!user) {
+//     return res.status(404).send("User not found");
+//   }
+//   if (password) {
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).send("Invalid password");
+//     }
+//     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET);
+//     res.json({ token });
+//   } else {
+//     return res.status(401).send("password not provided");
+//   }
+// };
